@@ -1,122 +1,173 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/Addons.js';
 
-
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 10;
+const camera = new THREE.PerspectiveCamera(
+  75,
+  window.innerWidth / window.innerHeight,
+  0.1,
+  1000
+);
+
+camera.position.set(0, 10, 10);
+camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-const controls= new OrbitControls(camera, renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+// controls.enableRotate = false;
 controls.enableDamping = true;
-controls.dampingFactor = 0.05;
 
-const planeGeometry = new THREE.PlaneGeometry(10, 10);
-const planeMaterial = new THREE.MeshBasicMaterial({ color: 'darkGray', side: THREE.DoubleSide });
+const planeGeometry = new THREE.PlaneGeometry(14, 14);
+const planeMaterial = new THREE.MeshStandardMaterial({
+  color: 0x00ff00,
+  side: THREE.DoubleSide
+});
 const plane = new THREE.Mesh(planeGeometry, planeMaterial);
-plane.rotation.z = -Math.PI / 2;
-plane.rotation.x = -Math.PI / 4;
+plane.rotation.x = -Math.PI / 2;
 scene.add(plane);
 
-const sphereGeometry = new THREE.SphereGeometry(0.5, 32, 32);
-const sphereMaterial = new THREE.MeshStandardMaterial({ color: 'red' });
-const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
-sphere.position.set(0, 0, 2);
-scene.add(sphere);
+const gridSize = 14;
+const grid = new THREE.GridHelper(gridSize, gridSize);
+scene.add(grid);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-scene.add(ambientLight);
+const light = new THREE.AmbientLight(0xffffff, 0.6);
+scene.add(light);
+
+
+let food = { x: 0, z: 0 };
+let foodMesh;
+
+function foodLogic() {
+
+  food.x = Math.floor(Math.random() * gridSize- gridSize/2);
+  food.z = Math.floor(Math.random() * gridSize - gridSize/2);
+
+  // console.log(food.x, "and", food.z)
+
+if (!foodMesh) {
+    const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+    const material = new THREE.MeshStandardMaterial({ color: 'red' });
+    foodMesh = new THREE.Mesh(geometry, material);
+    scene.add(foodMesh);
+  }
+
+  foodMesh.position.set(food.x, 0.4, food.z);
+}
 
 let snake = [
-  { x: 0, y: 0 },
-  { x: -1, y: 0 },
+  { x: -1, z: 0 },
+  { x: -2, z: 0 }
 ];
 
-const geometry = new THREE.BoxGeometry(1, 1, 1);
-const material = new THREE.MeshBasicMaterial({ color: 'green' });
-
 let snakeMeshes = [];
+const snakeGeometry = new THREE.BoxGeometry(0.8,0.5,0.5);
+const snakeMaterial = new THREE.MeshStandardMaterial({ color: 'darkGrey' });
 
-snake.forEach(index => {
-  const cube = new THREE.Mesh(geometry, material);
-  cube.position.set(index.x, index.y, 0);
+snake.forEach(item => {
+  const cube = new THREE.Mesh(snakeGeometry, snakeMaterial);
+  cube.position.set(item.x, 0.4, item.z);
   scene.add(cube);
   snakeMeshes.push(cube);
 });
 
-
 let direction = {
    x: 1,
-   y: 0
-};
-
+   z: 0
+  };
 
 let lastMoveTime = 0;
 let speed = 300;
 
+let isGameOver = false;
+
 function moveSnake() {
+
   const head = snake[0];
 
   const newHead = {
     x: head.x + direction.x,
-    y: head.y + direction.y
+    z: head.z + direction.z
   };
 
-  snake.unshift(newHead);//one item is added in the beginning
-  snake.pop();//one item is removed from the end
+  // Boundary checking Condition
+  if (
+    newHead.x < -gridSize/2 || newHead.x > gridSize/2 || newHead.z < -gridSize/2 || newHead.z > gridSize/2) {
+    gameOver();
+    return;
+  }
+  // Snake Size Growth
+  if (newHead.x === food.x && newHead.z === food.z) {
+    snake.unshift(newHead);
+    const cube = new THREE.Mesh(snakeGeometry, snakeMaterial);
+    scene.add(cube);
+    snakeMeshes.push(cube);
+
+    foodLogic();
+
+  } else {
+    snake.unshift(newHead);
+    snake.pop();
+  }
 
   updateSnake();
 }
 
+
 function updateSnake() {
   snake.forEach((item, index) => {
-    snakeMeshes[index].position.set(item.x, item.y, 0);
+    snakeMeshes[index].position.set(item.x, 0.4, item.z);
   });
 }
 
+function gameOver() {
+  isGameOver = true;
+  alert("Game Over!");
+}
+
+window.addEventListener("keydown", (e) => {
+
+  if (e.key === "ArrowUp" && direction.z !== 1)
+    direction = { x: 0, z: -1 };
+
+  if (e.key === "ArrowDown" && direction.z !== -1)
+    direction = { x: 0, z: 1 };
+
+  if (e.key === "ArrowLeft" && direction.x !== 1)
+    direction = { x: -1, z: 0 };
+
+  if (e.key === "ArrowRight" && direction.x !== -1)
+    direction = { x: 1, z: 0 };
+
+});
+
+// function restartGame(){
+//   snakeMeshes=[];
+
+// }
+
+
+
 function animate(time = 0) {
+
   window.requestAnimationFrame(animate);
-  // Move the snake at a fixed interval
-  if (time - lastMoveTime > speed) {
+
+  if (!isGameOver && time - lastMoveTime > speed) {
     moveSnake();
     lastMoveTime = time;
   }
+
   renderer.render(scene, camera);
 }
+foodLogic();
 animate();
-
-window.addEventListener("keydown", (event) => {
-  if (event.key === "ArrowUp"  && direction.y !== -1){
-    direction = { x: 0, y: 1 };
-  }
-
-  if (event.key === "ArrowDown" && direction.y !== 1){
-    direction = { x: 0, y: -1 };
-  }
-
-  if (event.key === "ArrowLeft" && direction.x !== 1){
-    direction = { x: -1, y: 0 };
-  }
-
-  if (event.key === "ArrowRight" && direction.x !== -1){
-    direction = { x: 1, y: 0 };
-  }
-});
 
 
 window.addEventListener("resize", () => {
-  camera.left = -window.innerWidth / 20;
-  camera.right = window.innerWidth / 20;
-  camera.top = window.innerHeight / 20;
-  camera.bottom = -window.innerHeight / 20;
+  camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-
-
-
+});  
