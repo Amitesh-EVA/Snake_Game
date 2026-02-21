@@ -133,7 +133,7 @@ export function moveSnake() {
     snakeMeshes.push(cube);
     score += 10;
     scoreBoard.innerText = score;
-    
+
     foodLogic();
   } else {
     snake.unshift(newHead);
@@ -169,6 +169,7 @@ export function restartGame() {
   snakeMeshes.forEach(mesh => scene.remove(mesh));
   snakeMeshes = [];
   score = 0;
+  scoreBoard.innerText = 0;
   createSnake();
   foodLogic();
 }
