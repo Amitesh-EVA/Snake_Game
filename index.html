@@ -5,13 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake Game</title>
     <link rel="stylesheet" href="style.css">
-    
+   
 </head>
 <body>
-    <!-- <div class="panel">
-        <div class="score">Score=0</div>
-        <button class="restart">Restart</button>
-    </div> -->
+<div id="startScreen">
+  <div class="popup">
+    <h1 class="gameName">Grid of Doom</h1>
+    <h1 class="bigTitle">NEW GAME</h1>
+    <button id="startBtn">Start</button>
+  </div>
+</div>
+<div class="scorePanel">
+  <div class="scoreBox">
+    <span class="label">Score</span>
+    <span id="scoreBoard" class="value">0</span>
+  </div>
+
+  <div class="scoreBox">
+    <span class="label">High Score</span>
+    <span id="highScore" class="value">0</span>
+  </div>
+</div>
+<div class="controlsInfo">
+  USE ARROW KEYS TO MOVE  
+  <br>
+  ⬆ UP &nbsp;&nbsp; ⬇ DOWN &nbsp;&nbsp; ⬅ LEFT &nbsp;&nbsp; ➡ RIGHT
+</div>
+<div id="gameOverScreen">
+  <div class="popup">
+    <h1>Game Over</h1>
+    <p id="finalScore"></p>
+    <p id="finalLength"></p>
+    <button class="restart">Restart</button>
+  </div>
+</div>
+
+
     <script type="module" src="main.js"></script>
 </body>
 </html>
